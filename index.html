@@ -43,7 +43,7 @@
 <body>
     <!-- 📦 Datos embebidos (reemplaza este JSON con tus tarjetas) -->
     <script type="application/json" id="flashcardData">
-   [
+[
   {
     "question": "Según el texto, ¿cuándo es más probable que un comportamiento sea interpretado como “anormal”? A. Cuando no coincide con la moral dominante. B. Cuando se aparta de varios criterios o principios a la vez. C. Cuando es poco frecuente, sin importar su impacto. D. Cuando genera desacuerdo entre expertos.",
     "answer": "B. Es más probable considerar “anormal” un comportamiento cuando se aparta de varios criterios simultáneamente, no por un solo desacuerdo o rareza aislada."
@@ -422,17 +422,13 @@
             }
         }
         function showQuestion(){
+            // ← Asegura estado de "cara pregunta" y oculta calificación
+            isShowingAnswer = false;
             const q = questions[currentIndex];
             document.getElementById('questionText').innerHTML = `<p>${formatOptions(q.question)}</p>`;
             document.getElementById('progress').textContent = `${currentIndex+1} / ${questions.length}`;
             document.getElementById('cardIndicator').textContent = 'PREGUNTA';
-            if(answers.hasOwnProperty(currentIndex)){
-                document.getElementById('answerButtons').classList.remove('show');
-            }else{
-                if(isShowingAnswer) document.getElementById('answerButtons').classList.add('show');
-                else document.getElementById('answerButtons').classList.remove('show');
-            }
-            isShowingAnswer = false;
+            document.getElementById('answerButtons').classList.remove('show'); // siempre oculto en pregunta
             setStatusBadge();
         }
         function showAnswer(){
@@ -454,13 +450,13 @@
             if(isShowingAnswer) showQuestion(); else showAnswer();
         });
         document.getElementById('correctBtn').addEventListener('click', ()=>{
-            if(answers.hasOwnProperty(currentIndex)) return;
+            if(!isShowingAnswer || answers.hasOwnProperty(currentIndex)) return; // Solo en cara respuesta
             answers[currentIndex] = true;
             const { hash } = loadEmbedded(); saveAll(hash);
             nextQuestion();
         });
         document.getElementById('incorrectBtn').addEventListener('click', ()=>{
-            if(answers.hasOwnProperty(currentIndex)) return;
+            if(!isShowingAnswer || answers.hasOwnProperty(currentIndex)) return; // Solo en cara respuesta
             answers[currentIndex] = false;
             const { hash } = loadEmbedded(); saveAll(hash);
             nextQuestion();
