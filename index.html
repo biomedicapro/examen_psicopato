@@ -421,16 +421,22 @@
                 badge.className = 'status-badge';
             }
         }
-        function showQuestion(){
-            // ← Asegura estado de "cara pregunta" y oculta calificación
-            isShowingAnswer = false;
-            const q = questions[currentIndex];
-            document.getElementById('questionText').innerHTML = `<p>${formatOptions(q.question)}</p>`;
-            document.getElementById('progress').textContent = `${currentIndex+1} / ${questions.length}`;
-            document.getElementById('cardIndicator').textContent = 'PREGUNTA';
-            document.getElementById('answerButtons').classList.remove('show'); // siempre oculto en pregunta
-            setStatusBadge();
-        }
+function showQuestion(){
+    // Fuerza modo "PREGUNTA"
+    isShowingAnswer = false;
+
+    const q = questions[currentIndex];
+    document.getElementById('questionText').innerHTML = `<p>${formatOptions(q.question)}</p>`;
+    document.getElementById('progress').textContent = `${currentIndex+1} / ${questions.length}`;
+    document.getElementById('cardIndicator').textContent = 'PREGUNTA';
+
+    // Siempre oculta los botones de calificación en la cara de pregunta
+    document.getElementById('answerButtons').classList.remove('show');
+
+    // Muestra el badge de estado (✓ o ✗ si ya fue respondida)
+    setStatusBadge();
+}
+
         function showAnswer(){
             const q = questions[currentIndex];
             document.getElementById('questionText').innerHTML = `<p>${formatOptions(q.answer)}</p>`;
@@ -554,3 +560,4 @@
     </script>
 </body>
 </html>
+
