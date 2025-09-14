@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Examen Flashcard</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{--bg-color:#fff;--text-color:#000;--border-color:#e0e0e0;--button-bg:#f5f5f5;--button-hover:#e0e0e0;--accent-color:#333;--ok:#4caf50;--bad:#f44336}
+        [data-theme="dark"]{--bg-color:#1a1a1a;--text-color:#e0e0e0;--border-color:#333;--button-bg:#2a2a2a;--button-hover:#3a3a3a;--accent-color:#ccc}
+        body{font-family:'Georgia','Times New Roman',serif;background:var(--bg-color);color:var(--text-color);transition:all .3s ease;overflow:hidden;height:100vh;text-align:justify;text-justify:inter-word}
+        .container{height:100vh;display:flex;flex-direction:column;position:relative}
+        .header{position:absolute;top:0;left:0;right:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:10px 20px;background:transparent}
+        .progress{font-size:12px;color:var(--text-color);opacity:.6}
+        .controls{display:flex;gap:10px}
+        .control-btn{background:var(--button-bg);border:1px solid var(--border-color);color:var(--text-color);width:30px;height:30px;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .2s ease}
+        .control-btn:hover{background:var(--button-hover)}
+        .flashcard-container{flex:1;display:flex;align-items:center;justify-content:center;padding:0;position:relative}
+        .flashcard{width:100vw;height:100vh;background:var(--bg-color);border:none;border-radius:0;box-shadow:none;display:flex;flex-direction:column;cursor:pointer;position:relative}
+        .flashcard-content{flex:1;display:flex;align-items:center;justify-content:center;padding:80px 28px 40px;line-height:1.6}
+        .text-block{width:100%;max-width:1000px}
+        .text-block p{margin-bottom:10px}
+        .answer-buttons{display:none;padding:16px 20px;border-top:1px solid transparent;justify-content:center;gap:20px}
+        .answer-buttons.show{display:flex}
+        .answer-btn{padding:12px 24px;border:1px solid var(--border-color);background:var(--button-bg);color:var(--text-color);border-radius:4px;cursor:pointer;font-size:16px;transition:all .2s ease}
+        .answer-btn:hover{background:var(--button-hover)}
+        .correct{background:#e8f5e8;border-color:var(--ok)}
+        .incorrect{background:#ffeaea;border-color:var(--bad)}
+        [data-theme="dark"] .correct{background:#1b2f1b;border-color:var(--ok)}
+        [data-theme="dark"] .incorrect{background:#2f1b1b;border-color:var(--bad)}
+        .status-badge{position:absolute;top:48px;right:16px;z-index:101;font-weight:bold;font-size:14px;opacity:.9;padding:6px 10px;border-radius:999px;border:1px solid currentColor;pointer-events:none;display:none}
+        .status-badge.ok{color:var(--ok);display:inline-block}
+        .status-badge.bad{color:var(--bad);display:inline-block}
+        .card-indicator{position:absolute;bottom:10px;right:15px;font-size:10px;opacity:.4}
+        .swipe-hint{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);font-size:10px;opacity:.4;text-align:center}
+        .results-screen{display:none;flex-direction:column;align-items:center;justify-content:center;height:100vh;text-align:center;padding:40px}
+        .score{font-size:48px;font-weight:bold;margin:20px 0;color:var(--accent-color)}
+        .restart-btn{padding:15px 30px;background:var(--button-bg);border:1px solid var(--border-color);color:var(--text-color);border-radius:4px;cursor:pointer;font-size:16px;margin:20px;transition:all .2s ease}
+        .restart-btn:hover{background:var(--button-hover)}
+        @media (max-width:768px){.flashcard-content{font-size:20px;padding:80px 16px 28px}.header{padding:10px 15px}}
+    </style>
+</head>
+<body>
+    <!-- 📦 Datos embebidos (reemplaza este JSON con tus tarjetas) -->
+    <script type="application/json" id="flashcardData">
+   [
+  {
+    "question": "Según el texto, ¿cuándo es más probable que un comportamiento sea interpretado como “anormal”? A. Cuando no coincide con la moral dominante. B. Cuando se aparta de varios criterios o principios a la vez. C. Cuando es poco frecuente, sin importar su impacto. D. Cuando genera desacuerdo entre expertos.",
+    "answer": "B. Es más probable considerar “anormal” un comportamiento cuando se aparta de varios criterios simultáneamente, no por un solo desacuerdo o rareza aislada."
+  },
+  {
+    "question": "La principal limitación del enfoque estadístico es que: A. Confunde lo frecuente con lo saludable o adaptativo. B. Niega la existencia de distribuciones normales. C. Depende del juicio moral para definir rangos. D. Ignora cualquier referencia a población.",
+    "answer": "A. Lo más frecuente no siempre es lo saludable ni adaptativo, por lo que la “normalidad estadística” puede alejarse de lo ideal o funcional."
+  },
+  {
+    "question": "¿Qué riesgo subraya el enfoque social o normativo? A. Universaliza valores filosóficos. B. Tiende al relativismo y puede marginar a quienes no se ajustan a la norma hegemónica. C. Sobrecorrige por diversidad individual. D. Desestima la historia de las normas.",
+    "answer": "B. Se destaca el relativismo y la posibilidad de marginación por énfasis en la conformidad con normas cambiantes y contextuales."
+  },
+  {
+    "question": "En el enfoque cultural o antropológico, ¿cuál afirmación es coherente con el texto? A. La cultura fija una vez y para siempre lo normal. B. La normalidad depende de lo legalmente permitido. C. La normalidad varía entre culturas y la cultura misma es fluida y cambiante. D. Solo lo biológico determina lo normal.",
+    "answer": "C. Lo normal/anormal es cultural y la cultura es fluida, pudiendo variar incluso dentro de una misma cultura por interacciones y asimilación."
+  },
+  {
+    "question": "La premisa central del enfoque evolutivo/adaptativo es que lo normal: A. Coincide con el promedio poblacional. B. Se define por la eficacia para afrontar cambios del entorno y varía según la etapa del desarrollo. C. Es lo moralmente ideal. D. Depende del autorreporte de satisfacción vital.",
+    "answer": "B. Lo normal es lo que permite afrontar eficazmente cambios y se comprende de modo dinámico según el desarrollo."
+  },
+  {
+    "question": "¿Cuál es la limitación específica señalada al enfoque evolutivo/adaptativo? A. No puede aplicarse a poblaciones. B. Clasifica como “anormal” conductas poco adaptativas sin considerar desigualdades o exclusión estructural. C. Desconoce la biología. D. Carece de utilidad clínica.",
+    "answer": "B. Puede estigmatizar conductas poco adaptativas sin ponderar contextos de desigualdad."
+  },
+  {
+    "question": "El enfoque de diversidad e inclusión sostiene que la normalidad: A. Es fija para proteger a la mayoría. B. Es la media estadística. C. Es fluida y honra diferencias, aunque algunos autores piden normas operativas en ciertos contextos. D. Debe limitarse a lo clínico.",
+    "answer": "C. Se enfatiza la fluidez y la aceptación de variedad, con la tensión de requerir normas operativas en contextos particulares."
+  },
+  {
+    "question": "En el enfoque filosófico y ético, ¿qué matiz ofrece el texto? A. Lo normal siempre coincide con lo común. B. Lo normal se vincula con lo moralmente deseable, aunque pueda ser poco común; su aplicación es abstracta y variable. C. Se reduce a cumplir leyes. D. Solo admite criterios utilitaristas.",
+    "answer": "B. Lo normal puede asociarse a lo deseable moralmente y no a lo común; además es abstracto y variable, dificultando su práctica."
+  },
+  {
+    "question": "En la perspectiva subjetiva/experiencial/humanista, la anormalidad se sugiere principalmente por: A. El desacuerdo entre expertos. B. La percepción de distrés subjetivo por parte de la persona. C. La desaprobación social. D. La presencia de signos físicos.",
+    "answer": "B. Se centra en la percepción de la persona; la aparición/interpretación de sufrimiento subjetivo sugiere anormalidad."
+  },
+  {
+    "question": "¿Qué consecuencia problemática menciona el texto para la perspectiva subjetiva si se lleva al extremo? A. Universaliza la moral. B. Impide medir biológicamente el malestar. C. Dificulta una definición colectiva y operativa de normalidad. D. Elimina la historia cultural.",
+    "answer": "C. La centralidad exclusiva en lo subjetivo dificulta lograr una definición colectiva/operativa."
+  },
+  {
+    "question": "En la visión clínica/médica/psicológica/psiquiátrica, ¿cuál de las siguientes fue una ampliación respecto de la mirada orgánica inicial? A. Cumplimiento de expectativas culturales hegemónicas. B. Adaptabilidad al entorno, salud emocional y funcionamiento social. C. Ajuste a códigos legales. D. Promedio estadístico de rasgos.",
+    "answer": "B. Se amplió hacia adaptabilidad, salud emocional y funcionamiento social, más allá de la ausencia de enfermedad física o mental."
+  },
+  {
+    "question": "¿Cuál de las siguientes no es una crítica a la visión orgánica estricta de la normalidad? A. Ignora aspectos sociales, psicológicos o culturales. B. Supone que la ausencia de síntomas agota la definición. C. Varía con la asimilación cultural de minorías. D. Requiere complementarse con criterios funcionales.",
+    "answer": "C. La variación por asimilación cultural corresponde al enfoque cultural, no a la crítica interna de la mirada orgánica."
+  },
+  {
+    "question": "¿Cuál par énfasis-rasgo está correctamente asociado según el texto? A. Estadístico—moralmente deseable. B. Social/normativo—ajuste a normas formales e informales en contextos definidos. C. Subjetivo—medición por rangos poblacionales. D. Filosófico—prevalencia de la media.",
+    "answer": "B. El enfoque social/normativo se define por el ajuste a normas formales e informales en contextos sociales específicos."
+  },
+  {
+    "question": "¿Qué formulación integra adecuadamente los tres subcriterios clínicos ampliados al final del texto? A. Adaptación al entorno + ausencia de malestar + bienestar subjetivo. B. Frecuencia estadística + moral mayoritaria + bienestar subjetivo. C. Normas sociales + ausencia de síntomas + media poblacional. D. Ideal filosófico + desarrollo evolutivo + dolor físico.",
+    "answer": "A. El texto lista explícitamente adaptación, ausencia de malestar psicológico y bienestar subjetivo como indicadores de normalidad."
+  },
+  {
+    "question": "¿Qué afirmación global es más fiel al marco del texto? A. La normalidad es atemporal y única. B. La normalidad depende del lugar y del tiempo, por lo que requiere múltiples aproximaciones para su definición. C. Basta con el criterio clínico para toda decisión. D. Si algo es común, siempre es normal.",
+    "answer": "B. La normalidad es contextual e histórica, y requiere diversas perspectivas para definirse."
+  },
+  {
+    "question": "¿Qué explica que actitudes, emociones y comportamientos varíen según el contexto?",
+    "answer": "La interacción entre ambiente, procesos internos y capacidad de adaptación."
+  },
+  {
+    "question": "¿Por qué la “normalidad” se aborda desde varias perspectivas en el texto?",
+    "answer": "Porque es un concepto complejo."
+  },
+  {
+    "question": "¿Cómo define la perspectiva estadística lo “normal”?",
+    "answer": "Lo más frecuente en la población (dentro del rango de la mayoría)."
+  },
+  {
+    "question": "¿Qué limitación clave tiene la normalidad estadística?",
+    "answer": "Lo común no siempre es saludable ni adaptativo."
+  },
+  {
+    "question": "¿Cómo define la perspectiva social o normativa lo “normal”?",
+    "answer": "Conformidad con normas sociales formales e informales."
+  },
+  {
+    "question": "¿Cuál es la crítica central a la visión social/normativa?",
+    "answer": "Es relativista y cambiante según el contexto histórico."
+  },
+  {
+    "question": "Según la perspectiva cultural/antropológica, ¿qué es la normalidad?",
+    "answer": "Un concepto cultural que varía entre culturas."
+  },
+  {
+    "question": "¿Cómo define la perspectiva evolutiva/adaptativa lo “normal”?",
+    "answer": "Lo que permite afrontar eficazmente los cambios del entorno."
+  },
+  {
+    "question": "¿Qué limitación reconoce la visión evolutiva/adaptativa?",
+    "answer": "Puede clasificar como “anormal” conductas condicionadas por desigualdad o exclusión."
+  },
+  {
+    "question": "En diversidad e inclusión, ¿qué resalta la noción de normalidad?",
+    "answer": "La diversidad y la aceptación amplia de diferencias."
+  },
+  {
+    "question": "¿Qué advertencia hacen algunos autores frente a diversidad e inclusión?",
+    "answer": "En ciertos contextos se requieren normas operativas para el bienestar general."
+  },
+  {
+    "question": "¿Cómo vincula la perspectiva filosófica/ética la normalidad?",
+    "answer": "A lo ética o moralmente deseable, no solo a lo común."
+  },
+  {
+    "question": "En la visión subjetiva/experiencial/humanista, ¿qué sugiere “anormalidad”?",
+    "answer": "La presencia de sufrimiento o distrés subjetivo."
+  },
+  {
+    "question": "¿Cómo define la perspectiva clínica/médica/psicológica/psiquiátrica la normalidad básica?",
+    "answer": "Parámetros biológicos en rangos saludables y ausencia de enfermedad o trastorno mental."
+  },
+  {
+    "question": "Según la ampliación clínica moderna, ¿qué dominios también definen normalidad?",
+    "answer": "Adaptabilidad al entorno, salud emocional y funcionamiento social."
+  },
+  {
+    "question": "Según la perspectiva estadística, “normal” se define por una distribución ______; lo más común no siempre es lo más ______ ni ______.",
+    "answer": "Según la perspectiva estadística, “normal” se define por una distribución [estadística]; lo más común no siempre es lo más [saludable] ni [adaptativo]."
+  },
+  {
+    "question": "En la aproximación social o normativa, “normal” es lo que se ajusta a normas ______ e ______, pero este enfoque se critica por ser excesivamente ______ y ______.",
+    "answer": "En la aproximación social o normativa, “normal” es lo que se ajusta a normas [formales] e [informales], pero este enfoque se critica por ser excesivamente [relativista] y [subjetivo]."
+  },
+  {
+    "question": "La visión cultural sostiene que normalidad/anormalidad son conceptos ______ y que la cultura es un concepto ______ y ______ en el tiempo.",
+    "answer": "La visión cultural sostiene que normalidad/anormalidad son conceptos [culturales] y que la cultura es un concepto [fluido] y [cambiante] en el tiempo."
+  },
+  {
+    "question": "En la perspectiva evolutiva o adaptativa, “normal” es lo que permite ______ eficazmente a los cambios del entorno; su limitación aparece en contextos de ______ o ______.",
+    "answer": "En la perspectiva evolutiva o adaptativa, “normal” es lo que permite [afrontar] eficazmente a los cambios del entorno; su limitación aparece en contextos de [desigualdades sociales] o [exclusión estructural]."
+  },
+  {
+    "question": "El enfoque de diversidad e inclusión concibe la normalidad como ______ y promueve la aceptación de una ______ más amplia; algunos autores exigen adherirse a ______ operativas para proteger el bienestar general.",
+    "answer": "El enfoque de diversidad e inclusión concibe la normalidad como [fluida] y promueve la aceptación de una [variedad] más amplia; algunos autores exigen adherirse a [normas] operativas para proteger el bienestar general."
+  },
+  {
+    "question": "Desde la perspectiva filosófica y ética, lo “normal” se vincula con lo ______ o ______ deseable, pero su aplicación se complica por basarse en ______ normativos a menudo inalcanzables.",
+    "answer": "Desde la perspectiva filosófica y ética, lo “normal” se vincula con lo [ético] o [moralmente] deseable, pero su aplicación se complica por basarse en [ideales] normativos a menudo inalcanzables."
+  },
+  {
+    "question": "La aproximación subjetiva/experiencial/humanista centra la normalidad en la ______ de sí mismo; la aparición de ______ o ______ sugiere “anormalidad”.",
+    "answer": "La aproximación subjetiva/experiencial/humanista centra la normalidad en la [percepción] de sí mismo; la aparición de [sufrimiento] o [distrés subjetivo] sugiere “anormalidad”."
+  },
+  {
+    "question": "En la definición clínica/médica/psicológica/psiquiátrica, la normalidad alude a funciones ______ o ______ dentro de rangos saludables y a la ______ de síntomas o signos de enfermedad.",
+    "answer": "En la definición clínica/médica/psicológica/psiquiátrica, la normalidad alude a funciones [fisiológicas] o [anatómicas] dentro de rangos saludables y a la [ausencia] de síntomas o signos de enfermedad."
+  },
+  {
+    "question": "Una crítica a la visión orgánica de la normalidad es que ignora aspectos ______, ______ o ______ que pueden ser relevantes para su definición.",
+    "answer": "Una crítica a la visión orgánica de la normalidad es que ignora aspectos [sociales], [psicológicos] o [culturales] que pueden ser relevantes para su definición."
+  },
+  {
+    "question": "La ampliación contemporánea de la definición clínica incluye tres ejes: ______ al entorno, ______ emocional y ______ social.",
+    "answer": "La ampliación contemporánea de la definición clínica incluye tres ejes: [adaptabilidad] al entorno, [salud] emocional y [funcionamiento] social."
+  },
+  {
+    "question": "Una mujer practica meditación intensiva (3 h/día), es poco frecuente en su comunidad, no presenta malestar ni deterioro funcional. ¿Qué enfoque clasificaría mejor esta conducta como “normal”? A. Estadístico B. Social/normativo C. Clínico-psiquiátrico (salud, ausencia de malestar/deterioro) D. Filosófico/ético",
+    "answer": "C. Clínico-psiquiátrico (prima ausencia de malestar/deterioro)."
+  },
+  {
+    "question": "Niño de 2 años con rabietas y apego intenso; no hay signos de maltrato ni retraso global. ¿Qué perspectiva apoya considerarlo normal por etapa del desarrollo? A. Cultural/antropológica B. Evolutiva/adaptativa C. Subjetiva/humanista D. Estadística",
+    "answer": "B. Evolutiva/adaptativa."
+  },
+  {
+    "question": "Trance ritual comunitario con glosolalia en festividad religiosa, sin disfunción. ¿Qué criterio evita un falso positivo de psicosis? A. Social/normativo B. Cultural/antropológico C. Subjetivo/humanista D. Estadístico",
+    "answer": "B. Cultural/antropológico."
+  },
+  {
+    "question": "¿Cuál es la principal limitación del enfoque social/normativo para definir “normalidad”? A. Ignora el sufrimiento subjetivo B. Es rígido y biológico C. Es relativista y puede marginar minorías D. Depende de mediciones laboratoriales",
+    "answer": "C. Es relativista y puede marginar minorías."
+  },
+  {
+    "question": "Experiencias hipnagógicas aisladas (al inicio del sueño), sin deterioro. ¿Cuál es la consideración más adecuada? A. Anormales por definición B. Variantes normales si no hay malestar/deterioro C. Requieren antipsicóticos D. Delirios por privación sensorial",
+    "answer": "B. Variantes normales si no hay malestar/deterioro."
+  },
+  {
+    "question": "En psicopatología clínica, el umbral para definir “trastorno mental” se centra sobre todo en: A. Desviación estadística sin más B. Conflicto con normas morales C. Malestar clínicamente significativo o deterioro funcional D. Rareza biológica del rasgo",
+    "answer": "C. Malestar clínicamente significativo o deterioro funcional."
+  },
+  {
+    "question": "Paciente realiza rituales cotidianos durante 3 horas; dice “no me molesta”, pero llegó tarde y perdió su empleo. ¿Qué criterio pesa más para intervenir? A. Desviación estadística B. Peligro para terceros C. Deterioro funcional D. Inmoralidad del acto",
+    "answer": "C. Deterioro funcional."
+  },
+  {
+    "question": "¿Cuál ejemplo describe mejor un rasgo egosintónico (vs. egodistónico)? A. Obsesiones intrusas que angustian B. Anorexia con rechazo a la delgadez C. Grandiosidad persistente vivida como parte valiosa del yo D. Fobia social que el paciente desea cambiar",
+    "answer": "C. Grandiosidad egosintónica."
+  },
+  {
+    "question": "¿Qué enfoque reduce el sobrediagnóstico cuando una creencia es ampliamente compartida por una comunidad? A. Estadístico B. Cultural/antropológico C. Subjetivo/humanista D. Filosófico/ético",
+    "answer": "B. Cultural/antropológico."
+  },
+  {
+    "question": "En evaluación y examen, ¿qué propiedad asegura que dos clínicos distintos lleguen a conclusiones similares sobre “normal” vs “anormal”? A. Validez de constructo B. Fiabilidad interevaluador C. Validez convergente D. Sensibilidad diagnóstica",
+    "answer": "B. Fiabilidad interevaluador."
+  },
+  {
+    "question": "Paciente adulto competente rechaza transfusión por motivos religiosos, sin riesgo inmediato para terceros. ¿Qué perspectiva respalda mejor respetar su decisión como “normal” en términos éticos? A. Estadística B. Social/normativa C. Filosófica/ética (autonomía) D. Subjetiva/humanista",
+    "answer": "C. Filosófica/ética (autonomía)."
+  },
+  {
+    "question": "Conducta infrecuente pero altamente adaptativa (dormir poco sin déficit, rendimiento óptimo, sin malestar). ¿Qué enfoque la considera “normal”? A. Evolutivo/adaptativo B. Subjetivo/humanista C. Estadístico D. Social/normativo",
+    "answer": "A. Evolutivo/adaptativo."
+  },
+  {
+    "question": "Persona LGBTQ+ en comunidad conservadora refiere sufrimiento por rechazo social, pero conserva pleno funcionamiento. ¿Qué enfoque ayuda a NO patologizar su identidad? A. Social/normativo B. Diversidad e inclusión C. Estadístico D. Filosófico/ético",
+    "answer": "B. Diversidad e inclusión."
+  },
+  {
+    "question": "En la práctica clínica, el esquema de las “4 D” (deviance, distress, dysfunction, danger) es útil. ¿Cuál “D” suele ser decisiva para priorizar tratamiento cuando hay recursos limitados? A. Desviación B. Malestar leve sin impacto C. Disfunción marcada D. Rareza de la conducta",
+    "answer": "C. Disfunción marcada."
+  },
+  {
+    "question": "Controlador aéreo con TDAH leve desea trabajar sin medicación; presenta fallos de atención ocasionales. ¿Qué enfoque enfatiza la necesidad de normas operativas estrictas por seguridad pública? A. Diversidad e inclusión (con salvaguardas operativas) B. Subjetivo/humanista C. Cultural/antropológico D. Estadístico",
+    "answer": "A. Diversidad e inclusión (reconoce límites por seguridad)."
+  }
+]
+    </script>
+
+    <div class="container">
+        <!-- Encabezado -->
+        <div class="header" id="header" style="display:none;">
+            <div class="progress" id="progress">1 / 10</div>
+            <div class="controls">
+                <button class="control-btn" id="themeToggle" title="Cambiar tema">🌙</button>
+                <button class="control-btn" id="fullscreenBtn" title="Pantalla completa">⛶</button>
+                <button class="control-btn" id="endExamBtn" title="Terminar examen">✖</button>
+            </div>
+        </div>
+
+        <!-- Flashcard -->
+        <div class="flashcard-container" id="flashcardContainer" style="display:none;">
+            <div class="flashcard" id="flashcard">
+                <div class="status-badge" id="statusBadge"></div>
+                <div class="flashcard-content" id="flashcardContent">
+                    <div id="questionText" class="text-block"></div>
+                </div>
+                <div class="answer-buttons" id="answerButtons">
+                    <button class="answer-btn correct" id="correctBtn">✓ Correcto</button>
+                    <button class="answer-btn incorrect" id="incorrectBtn">✗ Incorrecto</button>
+                </div>
+                <div class="card-indicator" id="cardIndicator">PREGUNTA</div>
+                <div class="swipe-hint">Desliza ↕ para navegar | Toca para voltear</div>
+            </div>
+        </div>
+
+        <!-- Resultados -->
+        <div class="results-screen" id="resultsScreen">
+            <h2>Examen Completado</h2>
+            <div class="score" id="finalScore">0/500</div>
+            <div id="scoreDetails">0 correctas de 0 respondidas</div>
+            <button class="restart-btn" id="restartBtn">Nuevo Examen</button>
+            <button class="restart-btn" id="reloadBtn">Reiniciar app</button>
+        </div>
+    </div>
+
+    <script>
+        // ======= Estado =======
+        let questions = [];      // [{question, answer}]
+        let currentIndex = 0;
+        let isShowingAnswer = false;
+        let answers = {};        // { index: true|false }
+        let examStarted = false;
+
+        // Touch
+        let startY = 0, startTime = 0;
+
+        // Tema
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if(savedTheme==='dark'){ body.setAttribute('data-theme','dark'); themeToggle.textContent='☀️'; }
+        themeToggle.addEventListener('click', ()=>{
+            const isDark = body.getAttribute('data-theme')==='dark';
+            if(isDark){ body.removeAttribute('data-theme'); themeToggle.textContent='🌙'; localStorage.setItem('theme','light'); }
+            else{ body.setAttribute('data-theme','dark'); themeToggle.textContent='☀️'; localStorage.setItem('theme','dark'); }
+        });
+
+        // Persistencia
+        const LS_KEY_DATA = 'examData_v3'; // nueva versión para modo embebido
+
+        function computeHash(str){
+            let h=0; for(let i=0;i<str.length;i++){ h=(h*31 + str.charCodeAt(i))>>>0; }
+            return h.toString(16);
+        }
+
+        function saveAll(dataHash){
+            const payload = { questions, currentIndex, answers, dataHash };
+            localStorage.setItem(LS_KEY_DATA, JSON.stringify(payload));
+        }
+        function loadAll(){ try{ return JSON.parse(localStorage.getItem(LS_KEY_DATA)); }catch{ return null; } }
+        function clearAll(){ localStorage.removeItem(LS_KEY_DATA); }
+
+        // Utilidades
+        function escapeHtml(str){
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                              .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+        }
+        function formatOptions(text){
+            let safe = escapeHtml(text).replace(/\r\n|\r/g,'\n');
+            // Inserta saltos antes de A./B./C./D. cuando van separados por espacios
+            safe = safe.replace(/(\s|^)(A\.\s)/g,'<br>$2')
+                       .replace(/(\s|^)(B\.\s)/g,'<br>$2')
+                       .replace(/(\s|^)(C\.\s)/g,'<br>$2')
+                       .replace(/(\s|^)(D\.\s)/g,'<br>$2')
+                       .replace(/\n/g,'<br>');
+            // Evita <br> inicial doble
+            safe = safe.replace(/^(<br>)+/,'');
+            return safe;
+        }
+        function shuffleInPlace(arr){
+            for(let i=arr.length-1;i>0;i--){
+                const j = Math.floor(Math.random()*(i+1));
+                [arr[i],arr[j]]=[arr[j],arr[i]];
+            }
+            return arr;
+        }
+
+        // Carga de dataset embebido
+        function loadEmbedded(){
+            const el = document.getElementById('flashcardData');
+            if(!el) return { list:[], hash:'0' };
+            const raw = el.textContent || '';
+            const hash = computeHash(raw.trim());
+            let list=[];
+            try{
+                const arr = JSON.parse(raw);
+                list = (Array.isArray(arr)?arr:[])
+                    .filter(o=>o && o.question && o.answer)
+                    .map(o=>({ question:String(o.question), answer:String(o.answer) }));
+            }catch(e){ console.warn('JSON inválido en #flashcardData'); }
+            return { list, hash };
+        }
+
+        // Inicio / reanudación
+        function boot(){
+            const { list, hash } = loadEmbedded();
+            const saved = loadAll();
+            if(saved && saved.dataHash === hash && Array.isArray(saved.questions) && saved.questions.length>0){
+                // Retomar exactamente como estaba
+                questions = saved.questions;
+                answers = saved.answers || {};
+                currentIndex = Math.min(Math.max(saved.currentIndex|0,0), questions.length-1);
+                startExam(false, hash);
+            }else{
+                // Nuevo arranque con mezcla
+                questions = shuffleInPlace([...list]);
+                answers = {};
+                currentIndex = 0;
+                startExam(true, hash);
+            }
+        }
+
+        function startExam(fromNewData, dataHash){
+            document.getElementById('header').style.display='flex';
+            document.getElementById('flashcardContainer').style.display='flex';
+            examStarted = true;
+            if(fromNewData) saveAll(dataHash);
+            showQuestion();
+        }
+
+        // Render
+        function setStatusBadge(){
+            const badge = document.getElementById('statusBadge');
+            if(answers.hasOwnProperty(currentIndex)){
+                const ok = !!answers[currentIndex];
+                badge.textContent = ok ? '✓ Respondida' : '✗ Respondida';
+                badge.className = 'status-badge ' + (ok ? 'ok' : 'bad');
+            }else{
+                badge.textContent = '';
+                badge.className = 'status-badge';
+            }
+        }
+        function showQuestion(){
+            const q = questions[currentIndex];
+            document.getElementById('questionText').innerHTML = `<p>${formatOptions(q.question)}</p>`;
+            document.getElementById('progress').textContent = `${currentIndex+1} / ${questions.length}`;
+            document.getElementById('cardIndicator').textContent = 'PREGUNTA';
+            if(answers.hasOwnProperty(currentIndex)){
+                document.getElementById('answerButtons').classList.remove('show');
+            }else{
+                if(isShowingAnswer) document.getElementById('answerButtons').classList.add('show');
+                else document.getElementById('answerButtons').classList.remove('show');
+            }
+            isShowingAnswer = false;
+            setStatusBadge();
+        }
+        function showAnswer(){
+            const q = questions[currentIndex];
+            document.getElementById('questionText').innerHTML = `<p>${formatOptions(q.answer)}</p>`;
+            document.getElementById('cardIndicator').textContent = 'RESPUESTA';
+            if(!answers.hasOwnProperty(currentIndex)){
+                document.getElementById('answerButtons').classList.add('show');
+            }else{
+                document.getElementById('answerButtons').classList.remove('show');
+            }
+            isShowingAnswer = true;
+            setStatusBadge();
+        }
+
+        // Interacciones
+        document.getElementById('flashcard').addEventListener('click',(e)=>{
+            if(e.target.classList.contains('answer-btn')) return;
+            if(isShowingAnswer) showQuestion(); else showAnswer();
+        });
+        document.getElementById('correctBtn').addEventListener('click', ()=>{
+            if(answers.hasOwnProperty(currentIndex)) return;
+            answers[currentIndex] = true;
+            const { hash } = loadEmbedded(); saveAll(hash);
+            nextQuestion();
+        });
+        document.getElementById('incorrectBtn').addEventListener('click', ()=>{
+            if(answers.hasOwnProperty(currentIndex)) return;
+            answers[currentIndex] = false;
+            const { hash } = loadEmbedded(); saveAll(hash);
+            nextQuestion();
+        });
+
+        function nextQuestion(){
+            if(currentIndex < questions.length-1){
+                currentIndex++;
+                const { hash } = loadEmbedded(); saveAll(hash);
+                showQuestion();
+            }else{ showResults(); }
+        }
+        function previousQuestion(){
+            if(currentIndex > 0){
+                currentIndex--;
+                const { hash } = loadEmbedded(); saveAll(hash);
+                showQuestion();
+            }
+        }
+
+        // Gestos
+        document.getElementById('flashcard').addEventListener('touchstart', (e)=>{
+            if(isShowingAnswer) return;
+            startY = e.touches[0].clientY; startTime = Date.now();
+        });
+        document.getElementById('flashcard').addEventListener('touchend', (e)=>{
+            if(isShowingAnswer) return;
+            const endY = e.changedTouches[0].clientY;
+            const deltaY = startY - endY, deltaTime = Date.now() - startTime;
+            if(Math.abs(deltaY)>50 && deltaTime<300){ if(deltaY>0) nextQuestion(); else previousQuestion(); }
+        });
+
+        // Teclado
+        document.addEventListener('keydown',(e)=>{
+            if(!examStarted) return;
+            switch(e.key){
+                case ' ':
+                case 'Enter':
+                    e.preventDefault(); if(isShowingAnswer) showQuestion(); else showAnswer(); break;
+                case 'ArrowUp':
+                    e.preventDefault(); if(!isShowingAnswer) nextQuestion(); break;
+                case 'ArrowDown':
+                    e.preventDefault(); if(!isShowingAnswer) previousQuestion(); break;
+                case '1':
+                    if(isShowingAnswer && !answers.hasOwnProperty(currentIndex)){
+                        answers[currentIndex]=true; const { hash }=loadEmbedded(); saveAll(hash); nextQuestion();
+                    } break;
+                case '2':
+                    if(isShowingAnswer && !answers.hasOwnProperty(currentIndex)){
+                        answers[currentIndex]=false; const { hash }=loadEmbedded(); saveAll(hash); nextQuestion();
+                    } break;
+            }
+        });
+
+        // Pantalla completa y terminar
+        document.getElementById('fullscreenBtn').addEventListener('click',()=>{
+            if(document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen();
+        });
+        document.getElementById('endExamBtn').addEventListener('click',()=>{
+            if(confirm('¿Estás seguro de que quieres terminar el examen?')) showResults();
+        });
+
+        // Resultados (puntaje sólo con respondidas)
+        function showResults(){
+            document.getElementById('flashcardContainer').style.display='none';
+            document.getElementById('header').style.display='none';
+            document.getElementById('resultsScreen').style.display='flex';
+
+            const totalAnswered = Object.keys(answers).length;
+            const correctAnswers = Object.values(answers).filter(a=>a).length;
+            const score = totalAnswered>0 ? Math.round((correctAnswers/totalAnswered)*500) : 0;
+
+            document.getElementById('finalScore').textContent = `${score}/500`;
+            document.getElementById('scoreDetails').textContent =
+                `${correctAnswers} correctas de ${totalAnswered} respondidas (sobre ${questions.length} preguntas cargadas)`;
+
+            const { hash } = loadEmbedded(); saveAll(hash);
+        }
+
+        document.getElementById('restartBtn').addEventListener('click', ()=>{
+            answers = {}; currentIndex = 0; questions = shuffleInPlace([...questions]);
+            const { hash } = loadEmbedded(); saveAll(hash);
+            document.getElementById('resultsScreen').style.display='none';
+            document.getElementById('header').style.display='flex';
+            document.getElementById('flashcardContainer').style.display='flex';
+            isShowingAnswer=false; showQuestion();
+        });
+        document.getElementById('reloadBtn').addEventListener('click', ()=>{
+            clearAll(); location.reload();
+        });
+
+        // Inicio
+        document.addEventListener('DOMContentLoaded', boot);
+        document.addEventListener('contextmenu', e=>e.preventDefault());
+    </script>
+</body>
+</html>
